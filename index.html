@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Patch Matching Tool</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Image Patch Matching Tool</h1>
+            <p>Upload an image, select a patch, and find matching regions with rotation support</p>
+        </header>
+
+        <div class="upload-section">
+            <input type="file" id="imageInput" accept="image/*" class="file-input">
+            <label for="imageInput" class="file-label">
+                <span>Choose Image File</span>
+            </label>
+        </div>
+
+        <div class="main-content">
+            <div class="canvas-container">
+                <canvas id="mainCanvas" width="800" height="600"></canvas>
+                <div class="canvas-overlay">
+                    <div class="instructions" id="instructions">
+                        Upload an image to get started
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls-panel">
+                <div class="control-group">
+                    <h3>Patch Selection</h3>
+                    <div class="patch-info">
+                        <span id="patchInfo">No patch selected</span>
+                    </div>
+                    <button id="clearPatch" class="btn btn-secondary" disabled>Clear Patch</button>
+                </div>
+
+                <div class="control-group">
+                    <h3>Matching Settings</h3>
+                    
+                    <div class="slider-group">
+                        <label for="rotationIncrement">Rotation Increment: <span id="rotationValue">15</span>°</label>
+                        <input type="range" id="rotationIncrement" min="0" max="90" value="15" class="slider">
+                    </div>
+
+                    <div class="slider-group">
+                        <label for="matchThreshold">Match Threshold: <span id="thresholdValue">70</span>%</label>
+                        <input type="range" id="matchThreshold" min="0" max="100" value="70" class="slider">
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="showMatches" checked>
+                        <label for="showMatches">Show Matches</label>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>Results</h3>
+                    <div class="results-info">
+                        <div class="result-item">
+                            <span class="label">Matches Found:</span>
+                            <span id="matchCount">0</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="label">Processing Time:</span>
+                            <span id="processingTime">-</span>
+                        </div>
+                    </div>
+                    <button id="runMatching" class="btn btn-primary" disabled>Run Matching</button>
+                </div>
+
+                <div class="control-group">
+                    <h3>Actions</h3>
+                    <button id="downloadResult" class="btn btn-secondary" disabled>Download Result</button>
+                    <button id="resetTool" class="btn btn-secondary">Reset Tool</button>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Drag to select a patch on the image • Matches will be highlighted with colored rectangles</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
