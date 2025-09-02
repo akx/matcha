@@ -8,18 +8,6 @@
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>Image Patch Matching Tool</h1>
-            <p>Upload an image, select a patch, and find matching regions with rotation support</p>
-        </header>
-
-        <div class="upload-section">
-            <input type="file" id="imageInput" accept="image/*" class="file-input">
-            <label for="imageInput" class="file-label">
-                <span>Choose Image File</span>
-            </label>
-        </div>
-
         <div class="main-content">
             <div class="canvas-container">
                 <canvas id="mainCanvas" width="800" height="600"></canvas>
@@ -32,7 +20,10 @@
 
             <div class="controls-panel">
                 <div class="control-group">
-                    <h3>Patch Selection</h3>
+                    <input type="file" id="imageInput" accept="image/*" class="file-input">
+                    <label for="imageInput" class="file-label">
+                        <span>Choose Image File</span>
+                    </label>
                     <div class="patch-info">
                         <span id="patchInfo">No patch selected</span>
                     </div>
@@ -40,7 +31,6 @@
                 </div>
 
                 <div class="control-group">
-                    <h3>Matching Settings</h3>
                     
                     <div class="slider-group">
                         <label for="rotationIncrement">Rotation Increment: <span id="rotationValue">15</span>°</label>
@@ -59,7 +49,6 @@
                 </div>
 
                 <div class="control-group">
-                    <h3>Results</h3>
                     <div class="results-info">
                         <div class="result-item">
                             <span class="label">Matches Found:</span>
@@ -74,16 +63,12 @@
                 </div>
 
                 <div class="control-group">
-                    <h3>Actions</h3>
                     <button id="downloadResult" class="btn btn-secondary" disabled>Download Result</button>
                     <button id="resetTool" class="btn btn-secondary">Reset Tool</button>
                 </div>
             </div>
         </div>
 
-        <footer>
-            <p>Drag to select a patch on the image • Matches will be highlighted with colored rectangles</p>
-        </footer>
     </div>
 
     <script src="script.js"></script>

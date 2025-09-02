@@ -6,54 +6,42 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    line-height: 1.6;
+    line-height: 1.5;
     color: #333;
-    background-color: #f5f5f5;
+    background-color: #f8f9fa;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
 }
 
 .container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 20px;
+    max-width: 100%;
+    margin: 0;
+    padding: 15px;
+    height: 100vh;
+    overflow: hidden;
 }
 
-header {
-    text-align: center;
-    margin-bottom: 30px;
-}
-
-header h1 {
-    color: #2c3e50;
-    font-size: 2.5rem;
-    margin-bottom: 10px;
-    font-weight: 600;
-}
-
-header p {
-    color: #666;
-    font-size: 1.1rem;
-}
-
-.upload-section {
-    text-align: center;
-    margin-bottom: 30px;
-}
 
 .file-input {
     display: none;
 }
 
 .file-label {
-    display: inline-block;
-    padding: 12px 24px;
+    display: block;
+    width: 100%;
+    padding: 10px 16px;
     background-color: #3498db;
     color: white;
-    border-radius: 6px;
+    border-radius: 4px;
     cursor: pointer;
-    font-size: 1rem;
+    font-size: 0.9rem;
     font-weight: 500;
     transition: background-color 0.2s ease;
     border: none;
+    text-align: center;
+    margin-bottom: 12px;
+    box-sizing: border-box;
 }
 
 .file-label:hover {
@@ -66,17 +54,22 @@ header p {
 
 .main-content {
     display: grid;
-    grid-template-columns: 1fr 350px;
-    gap: 30px;
+    grid-template-columns: 1fr 320px;
+    gap: 15px;
+    height: calc(100vh - 30px);
     align-items: start;
 }
 
 .canvas-container {
     position: relative;
     background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    border-radius: 6px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.1);
     overflow: hidden;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 #mainCanvas {
@@ -110,15 +103,16 @@ header p {
 
 .controls-panel {
     background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    padding: 20px;
-    height: fit-content;
+    border-radius: 6px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+    padding: 16px;
+    height: 100%;
+    overflow-y: auto;
 }
 
 .control-group {
-    margin-bottom: 25px;
-    padding-bottom: 20px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
     border-bottom: 1px solid #eee;
 }
 
@@ -127,32 +121,27 @@ header p {
     margin-bottom: 0;
 }
 
-.control-group h3 {
-    color: #2c3e50;
-    font-size: 1.2rem;
-    margin-bottom: 15px;
-    font-weight: 600;
-}
 
 .patch-info {
     background: #f8f9fa;
-    padding: 10px;
-    border-radius: 4px;
-    margin-bottom: 15px;
+    padding: 8px;
+    border-radius: 3px;
+    margin-bottom: 10px;
     font-family: monospace;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     color: #666;
 }
 
 .slider-group {
-    margin-bottom: 15px;
+    margin-bottom: 10px;
 }
 
 .slider-group label {
     display: block;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     font-weight: 500;
     color: #555;
+    font-size: 0.9rem;
 }
 
 .slider {
@@ -207,15 +196,16 @@ header p {
 
 .results-info {
     background: #f8f9fa;
-    padding: 15px;
-    border-radius: 4px;
-    margin-bottom: 15px;
+    padding: 10px;
+    border-radius: 3px;
+    margin-bottom: 10px;
 }
 
 .result-item {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
+    font-size: 0.9rem;
 }
 
 .result-item:last-child {
@@ -235,14 +225,14 @@ header p {
 
 .btn {
     width: 100%;
-    padding: 12px 20px;
+    padding: 8px 16px;
     border: none;
-    border-radius: 6px;
-    font-size: 1rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .btn:last-child {
@@ -272,38 +262,7 @@ header p {
     background-color: #7f8c8d;
 }
 
-footer {
-    text-align: center;
-    margin-top: 30px;
-    padding: 20px;
-    color: #666;
-    font-style: italic;
-}
 
-@media (max-width: 1024px) {
-    .main-content {
-        grid-template-columns: 1fr;
-        gap: 20px;
-    }
-    
-    .controls-panel {
-        order: -1;
-    }
-}
-
-@media (max-width: 768px) {
-    .container {
-        padding: 15px;
-    }
-    
-    header h1 {
-        font-size: 2rem;
-    }
-    
-    .controls-panel {
-        padding: 15px;
-    }
-}
 
 .selection-rectangle {
     position: absolute;
