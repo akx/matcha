@@ -205,47 +205,70 @@ class ImagePatchMatcher {
         return rotatedCanvas;
     }
 
-    normalizedCrossCorrelation(patch, target, x, y) {
-        if (x < 0 || y < 0 || x + patch.width > target.width || y + patch.height > target.height) {
+    precomputePatchData(patch) {
+        const patchData = patch.getContext('2d').getImageData(0, 0, patch.width, patch.height).data;
+        const grayValues = new Float32Array(patchData.length / 4);
+        let mean = 0;
+        
+        for (let i = 0; i < patchData.length; i += 4) {
+            const gray = (patchData[i] + patchData[i + 1] + patchData[i + 2]) / 3;
+            grayValues[i / 4] = gray;
+            mean += gray;
+        }
+        
+        mean /= grayValues.length;
+        
+        let variance = 0;
+        for (let i = 0; i < grayValues.length; i++) {
+            const diff = grayValues[i] - mean;
+            variance += diff * diff;
+        }
+        
+        return {
+            grayValues,
+            mean,
+            stdDev: Math.sqrt(variance),
+            width: patch.width,
+            height: patch.height
+        };
+    }
+
+    normalizedCrossCorrelation(patchInfo, target, x, y) {
+        if (x < 0 || y < 0 || x + patchInfo.width > target.width || y + patchInfo.height > target.height) {
             return -1;
         }
         
         try {
-            const patchData = patch.getContext('2d').getImageData(0, 0, patch.width, patch.height).data;
-            const targetData = target.getContext('2d').getImageData(x, y, patch.width, patch.height).data;
+            const targetData = target.getContext('2d').getImageData(x, y, patchInfo.width, patchInfo.height).data;
             
-            if (patchData.length !== targetData.length) {
+            if (targetData.length / 4 !== patchInfo.grayValues.length) {
                 return -1;
             }
             
-            let meanPatch = 0, meanTarget = 0;
-            const pixelCount = patchData.length / 4;
+            let meanTarget = 0;
+            const pixelCount = patchInfo.grayValues.length;
             
-            for (let i = 0; i < patchData.length; i += 4) {
-                const patchGray = (patchData[i] + patchData[i + 1] + patchData[i + 2]) / 3;
+            for (let i = 0; i < targetData.length; i += 4) {
                 const targetGray = (targetData[i] + targetData[i + 1] + targetData[i + 2]) / 3;
-                meanPatch += patchGray;
                 meanTarget += targetGray;
             }
             
-            meanPatch /= pixelCount;
             meanTarget /= pixelCount;
             
-            let numerator = 0, denomPatch = 0, denomTarget = 0;
+            let numerator = 0, denomTarget = 0;
             
-            for (let i = 0; i < patchData.length; i += 4) {
-                const patchGray = (patchData[i] + patchData[i + 1] + patchData[i + 2]) / 3;
+            for (let i = 0; i < targetData.length; i += 4) {
                 const targetGray = (targetData[i] + targetData[i + 1] + targetData[i + 2]) / 3;
+                const patchGray = patchInfo.grayValues[i / 4];
                 
-                const patchDiff = patchGray - meanPatch;
+                const patchDiff = patchGray - patchInfo.mean;
                 const targetDiff = targetGray - meanTarget;
                 
                 numerator += patchDiff * targetDiff;
-                denomPatch += patchDiff * patchDiff;
                 denomTarget += targetDiff * targetDiff;
             }
             
-            const denominator = Math.sqrt(denomPatch * denomTarget);
+            const denominator = patchInfo.stdDev * Math.sqrt(denomTarget);
             return denominator > 0 ? numerator / denominator : 0;
         } catch (error) {
             return -1;
@@ -288,6 +311,8 @@ class ImagePatchMatcher {
         const targetCtx = targetCanvas.getContext('2d');
         targetCtx.drawImage(this.canvas, 0, 0);
         
+        const rotatedPatches = new Map();
+        
         for (const angle of angles) {
             let rotatedPatch;
             if (angle === 0) {
@@ -296,12 +321,17 @@ class ImagePatchMatcher {
                 rotatedPatch = this.rotatePatch(patchCanvas, angle);
             }
             
+            const patchInfo = this.precomputePatchData(rotatedPatch);
+            rotatedPatches.set(angle, { patch: rotatedPatch, info: patchInfo });
+        }
+        
+        for (const [angle, { patch: rotatedPatch, info: patchInfo }] of rotatedPatches) {
             const maxY = this.canvas.height - rotatedPatch.height;
             const maxX = this.canvas.width - rotatedPatch.width;
             
             for (let y = 0; y <= maxY; y += stepY) {
                 for (let x = 0; x <= maxX; x += stepX) {
-                    const correlation = this.normalizedCrossCorrelation(rotatedPatch, targetCanvas, x, y);
+                    const correlation = this.normalizedCrossCorrelation(patchInfo, targetCanvas, x, y);
                     
                     if (correlation >= this.matchThreshold) {
                         let isDuplicate = false;
