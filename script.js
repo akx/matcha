@@ -34,7 +34,7 @@ class ImagePatchMatcher {
         rotationSlider.addEventListener('input', (e) => this.updateRotationIncrement(e));
         thresholdSlider.addEventListener('input', (e) => this.updateMatchThreshold(e));
         showMatchesCheckbox.addEventListener('change', (e) => this.toggleMatchDisplay(e));
-        runMatchingBtn.addEventListener('click', () => this.runMatching());
+        runMatchingBtn.addEventListener('click', () => this.startMatching());
         clearPatchBtn.addEventListener('click', () => this.clearPatch());
         resetBtn.addEventListener('click', () => this.resetTool());
         downloadBtn.addEventListener('click', () => this.downloadResult());
@@ -276,14 +276,14 @@ class ImagePatchMatcher {
         }
     }
 
-    async runMatching() {
+    async runMatching(onProgress = null) {
         if (!this.selectedPatch) {
             alert('Please select a patch first');
             return;
         }
 
         this.updateUI(true);
-        const startTime = Date.now();
+        const startTime = performance.now();
         
         this.allMatches = [];
         this.filteredMatches = [];
@@ -327,6 +327,16 @@ class ImagePatchMatcher {
             rotatedPatches.set(angle, { patch: rotatedPatch, info: patchInfo });
         }
         
+        let totalOperations = 0;
+        for (const [angle, { patch: rotatedPatch }] of rotatedPatches) {
+            const maxY = this.canvas.height - rotatedPatch.height;
+            const maxX = this.canvas.width - rotatedPatch.width;
+            totalOperations += Math.ceil((maxY / stepY) + 1) * Math.ceil((maxX / stepX) + 1);
+        }
+        
+        let completedOperations = 0;
+        let lastProgressUpdate = performance.now();
+        
         for (const [angle, { patch: rotatedPatch, info: patchInfo }] of rotatedPatches) {
             const maxY = this.canvas.height - rotatedPatch.height;
             const maxX = this.canvas.width - rotatedPatch.width;
@@ -334,6 +344,7 @@ class ImagePatchMatcher {
             for (let y = 0; y <= maxY; y += stepY) {
                 for (let x = 0; x <= maxX; x += stepX) {
                     const correlation = this.normalizedCrossCorrelation(patchInfo, targetCanvas, x, y);
+                    completedOperations++;
                     
                     if (correlation >= 0.01) {
                         let isDuplicate = false;
@@ -363,6 +374,23 @@ class ImagePatchMatcher {
                             });
                         }
                     }
+                    
+                    if (onProgress && (performance.now() - lastProgressUpdate) >= 100) {
+                        const progress = completedOperations / totalOperations;
+                        const elapsed = performance.now() - startTime;
+                        const eta = elapsed > 0 ? (elapsed / progress) - elapsed : 0;
+                        
+                        await onProgress({
+                            progress,
+                            nMatches: this.allMatches.length,
+                            eta: Math.round(eta),
+                            completedOperations,
+                            totalOperations
+                        });
+                        
+                        lastProgressUpdate = performance.now();
+                        await new Promise(resolve => setTimeout(resolve, 0));
+                    }
                 }
             }
         }
@@ -370,8 +398,21 @@ class ImagePatchMatcher {
         this.allMatches.sort((a, b) => b.correlation - a.correlation);
         this.filterMatches();
         
-        const processingTime = Date.now() - startTime;
-        document.getElementById('processingTime').textContent = `${processingTime}ms`;
+        if (this.allMatches.length > 0 && this.filteredMatches.length === 0) {
+            const highestMatch = this.allMatches[0];
+            const newThreshold = Math.max(0.01, highestMatch.correlation - 0.001);
+            this.matchThreshold = newThreshold;
+            
+            const thresholdSlider = document.getElementById('matchThreshold');
+            const newSliderValue = Math.round(newThreshold * 100);
+            thresholdSlider.value = newSliderValue;
+            document.getElementById('thresholdValue').textContent = newSliderValue;
+            
+            this.filterMatches();
+        }
+        
+        const processingTime = performance.now() - startTime;
+        document.getElementById('processingTime').textContent = `${Math.round(processingTime)}ms`;
         document.getElementById('totalMatches').textContent = this.allMatches.length;
         document.getElementById('matchCount').textContent = this.filteredMatches.length;
         
@@ -483,6 +524,35 @@ class ImagePatchMatcher {
         if (instructions) {
             instructions.textContent = text;
             instructions.style.display = this.imageLoaded ? 'none' : 'block';
+        }
+    }
+
+    async startMatching() {
+        const progressContainer = document.getElementById('progressContainer');
+        const progressFill = document.getElementById('progressFill');
+        const progressPercent = document.getElementById('progressPercent');
+        const progressMatches = document.getElementById('progressMatches');
+        const progressETA = document.getElementById('progressETA');
+        
+        progressContainer.style.display = 'block';
+        
+        const onProgress = async ({ progress, nMatches, eta }) => {
+            const percent = Math.round(progress * 100);
+            progressFill.style.width = `${percent}%`;
+            progressPercent.textContent = `${percent}%`;
+            progressMatches.textContent = `${nMatches} matches`;
+            
+            if (eta > 1000) {
+                progressETA.textContent = `~${Math.round(eta / 1000)}s left`;
+            } else {
+                progressETA.textContent = 'Almost done...';
+            }
+        };
+        
+        try {
+            await this.runMatching(onProgress);
+        } finally {
+            progressContainer.style.display = 'none';
         }
     }
 
