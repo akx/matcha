@@ -38,8 +38,9 @@
                     </div>
 
                     <div class="slider-group">
-                        <label for="matchThreshold">Match Threshold: <span id="thresholdValue">70</span>%</label>
-                        <input type="range" id="matchThreshold" min="0" max="100" value="70" class="slider">
+                        <label for="matchThreshold">Display Threshold: <span id="thresholdValue">70</span>%</label>
+                        <input type="range" id="matchThreshold" min="1" max="100" value="70" class="slider">
+                        <small class="threshold-note">Filters pre-computed matches in real-time</small>
                     </div>
 
                     <div class="checkbox-group">
@@ -51,13 +52,20 @@
                 <div class="control-group">
                     <div class="results-info">
                         <div class="result-item">
-                            <span class="label">Matches Found:</span>
+                            <span class="label">Matches Shown:</span>
                             <span id="matchCount">0</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="label">Total Found:</span>
+                            <span id="totalMatches">0</span>
                         </div>
                         <div class="result-item">
                             <span class="label">Processing Time:</span>
                             <span id="processingTime">-</span>
                         </div>
+                    </div>
+                    <div class="color-legend">
+                        <small>Colors: Hue = Rotation Angle, Brightness = Match Quality</small>
                     </div>
                     <button id="runMatching" class="btn btn-primary" disabled>Run Matching</button>
                 </div>

@@ -9,7 +9,8 @@ class ImagePatchMatcher {
         this.selectedPatch = null;
         this.isSelecting = false;
         this.selectionStart = null;
-        this.matches = [];
+        this.allMatches = [];
+        this.filteredMatches = [];
         
         this.rotationIncrement = 15;
         this.matchThreshold = 0.7;
@@ -284,7 +285,8 @@ class ImagePatchMatcher {
         this.updateUI(true);
         const startTime = Date.now();
         
-        this.matches = [];
+        this.allMatches = [];
+        this.filteredMatches = [];
         
         const patchCanvas = this.extractPatch(
             this.selectedPatch.x,
@@ -333,9 +335,9 @@ class ImagePatchMatcher {
                 for (let x = 0; x <= maxX; x += stepX) {
                     const correlation = this.normalizedCrossCorrelation(patchInfo, targetCanvas, x, y);
                     
-                    if (correlation >= this.matchThreshold) {
+                    if (correlation >= 0.01) {
                         let isDuplicate = false;
-                        for (const existingMatch of this.matches) {
+                        for (const existingMatch of this.allMatches) {
                             const dx = Math.abs(existingMatch.x - x);
                             const dy = Math.abs(existingMatch.y - y);
                             if (dx < rotatedPatch.width * 0.5 && dy < rotatedPatch.height * 0.5) {
@@ -351,7 +353,7 @@ class ImagePatchMatcher {
                         }
                         
                         if (!isDuplicate) {
-                            this.matches.push({
+                            this.allMatches.push({
                                 x,
                                 y,
                                 width: rotatedPatch.width,
@@ -365,28 +367,30 @@ class ImagePatchMatcher {
             }
         }
         
-        this.matches.sort((a, b) => b.correlation - a.correlation);
+        this.allMatches.sort((a, b) => b.correlation - a.correlation);
+        this.filterMatches();
         
         const processingTime = Date.now() - startTime;
         document.getElementById('processingTime').textContent = `${processingTime}ms`;
-        document.getElementById('matchCount').textContent = this.matches.length;
+        document.getElementById('totalMatches').textContent = this.allMatches.length;
+        document.getElementById('matchCount').textContent = this.filteredMatches.length;
         
         this.drawImage();
         this.updateUI(false);
     }
 
+    hslFromRotationAndMatch(angle, correlation) {
+        const hue = Math.round(angle);
+        const saturation = 100;
+        const lightness = Math.round(30 + (correlation * 50));
+        return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+    }
+
     drawMatches() {
-        if (!this.matches.length || !this.showMatches) return;
+        if (!this.filteredMatches.length || !this.showMatches) return;
         
-        this.matches.forEach(match => {
-            let color;
-            if (match.correlation >= 0.9) {
-                color = '#e74c3c';
-            } else if (match.correlation >= 0.8) {
-                color = '#f39c12';
-            } else {
-                color = '#f1c40f';
-            }
+        this.filteredMatches.forEach(match => {
+            const color = this.hslFromRotationAndMatch(match.angle, match.correlation);
             
             this.ctx.strokeStyle = color;
             this.ctx.lineWidth = 2;
@@ -406,11 +410,19 @@ class ImagePatchMatcher {
         document.getElementById('rotationValue').textContent = this.rotationIncrement;
     }
 
+    filterMatches() {
+        this.filteredMatches = this.allMatches.filter(match => 
+            match.correlation >= this.matchThreshold
+        );
+    }
+
     updateMatchThreshold(event) {
         this.matchThreshold = parseFloat(event.target.value) / 100;
         document.getElementById('thresholdValue').textContent = event.target.value;
         
-        if (this.matches.length > 0) {
+        if (this.allMatches.length > 0) {
+            this.filterMatches();
+            document.getElementById('matchCount').textContent = this.filteredMatches.length;
             this.drawImage();
         }
     }
@@ -422,11 +434,13 @@ class ImagePatchMatcher {
 
     clearPatch() {
         this.selectedPatch = null;
-        this.matches = [];
+        this.allMatches = [];
+        this.filteredMatches = [];
         this.updatePatchInfo();
         this.updateUI();
         this.drawImage();
         document.getElementById('matchCount').textContent = '0';
+        document.getElementById('totalMatches').textContent = '0';
         document.getElementById('processingTime').textContent = '-';
     }
 
@@ -434,13 +448,15 @@ class ImagePatchMatcher {
         this.image = null;
         this.imageLoaded = false;
         this.selectedPatch = null;
-        this.matches = [];
+        this.allMatches = [];
+        this.filteredMatches = [];
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.updateInstructions('Upload an image to get started');
         this.updatePatchInfo();
         this.updateUI();
         document.getElementById('imageInput').value = '';
         document.getElementById('matchCount').textContent = '0';
+        document.getElementById('totalMatches').textContent = '0';
         document.getElementById('processingTime').textContent = '-';
     }
 
