@@ -2,13 +2,13 @@ class ImagePatchMatcher {
   constructor() {
     this.canvas = document.querySelector("#mainCanvas");
     this.ctx = this.canvas.getContext("2d");
-    this.image = null;
+    this.image = undefined;
     this.imageLoaded = false;
     this.scaleFactor = 1;
 
-    this.selectedPatch = null;
+    this.selectedPatch = undefined;
     this.isSelecting = false;
-    this.selectionStart = null;
+    this.selectionStart = undefined;
     this.allMatches = [];
     this.filteredMatches = [];
 
@@ -30,18 +30,18 @@ class ImagePatchMatcher {
     const resetButton = document.querySelector("#resetTool");
     const downloadButton = document.querySelector("#downloadResult");
 
-    imageInput.addEventListener("change", (e) => this.handleImageUpload(e));
-    rotationSlider.addEventListener("input", (e) => this.updateRotationIncrement(e));
-    thresholdSlider.addEventListener("input", (e) => this.updateMatchThreshold(e));
-    showMatchesCheckbox.addEventListener("change", (e) => this.toggleMatchDisplay(e));
+    imageInput.addEventListener("change", (event) => this.handleImageUpload(event));
+    rotationSlider.addEventListener("input", (event) => this.updateRotationIncrement(event));
+    thresholdSlider.addEventListener("input", (event) => this.updateMatchThreshold(event));
+    showMatchesCheckbox.addEventListener("change", (event) => this.toggleMatchDisplay(event));
     runMatchingButton.addEventListener("click", () => this.startMatching());
     clearPatchButton.addEventListener("click", () => this.clearPatch());
     resetButton.addEventListener("click", () => this.resetTool());
     downloadButton.addEventListener("click", () => this.downloadResult());
 
-    this.canvas.addEventListener("mousedown", (e) => this.startSelection(e));
-    this.canvas.addEventListener("mousemove", (e) => this.updateSelection(e));
-    this.canvas.addEventListener("mouseup", (e) => this.endSelection(e));
+    this.canvas.addEventListener("mousedown", (event) => this.startSelection(event));
+    this.canvas.addEventListener("mousemove", (event) => this.updateSelection(event));
+    this.canvas.addEventListener("mouseup", () => this.endSelection());
   }
 
   async handleImageUpload(event) {
@@ -59,9 +59,9 @@ class ImagePatchMatcher {
       this.updateUI();
     });
 
-    img.onerror = () => {
+    img.addEventListener("error", () => {
       alert("Error loading image. Please try a different file.");
-    };
+    });
 
     img.src = URL.createObjectURL(file);
   }
@@ -72,7 +72,6 @@ class ImagePatchMatcher {
     const maxWidth = 800;
     const maxHeight = 600;
 
-    const { width: originalWidth, height: originalHeight } = this.image;
     let { width, height } = this.image;
 
     if (width > maxWidth || height > maxHeight) {
@@ -137,7 +136,7 @@ class ImagePatchMatcher {
     this.drawImage();
   }
 
-  endSelection(event) {
+  endSelection() {
     if (!this.isSelecting) return;
 
     this.isSelecting = false;
@@ -147,7 +146,7 @@ class ImagePatchMatcher {
       this.updatePatchInfo();
       this.updateUI();
     } else {
-      this.selectedPatch = null;
+      this.selectedPatch = undefined;
       this.updateUI();
     }
   }
@@ -277,7 +276,7 @@ class ImagePatchMatcher {
     }
   }
 
-  async runMatching(onProgress = null) {
+  async runMatching(onProgress) {
     if (!this.selectedPatch) {
       alert("Please select a patch first");
       return;
@@ -325,7 +324,7 @@ class ImagePatchMatcher {
     }
 
     let totalOperations = 0;
-    for (const [angle, { patch: rotatedPatch }] of rotatedPatches) {
+    for (const [, { patch: rotatedPatch }] of rotatedPatches) {
       const maxY = this.canvas.height - rotatedPatch.height;
       const maxX = this.canvas.width - rotatedPatch.width;
       totalOperations += Math.ceil(maxY / stepY + 1) * Math.ceil(maxX / stepX + 1);
@@ -469,7 +468,7 @@ class ImagePatchMatcher {
   }
 
   clearPatch() {
-    this.selectedPatch = null;
+    this.selectedPatch = undefined;
     this.allMatches = [];
     this.filteredMatches = [];
     this.updatePatchInfo();
@@ -481,9 +480,9 @@ class ImagePatchMatcher {
   }
 
   resetTool() {
-    this.image = null;
+    this.image = undefined;
     this.imageLoaded = false;
-    this.selectedPatch = null;
+    this.selectedPatch = undefined;
     this.allMatches = [];
     this.filteredMatches = [];
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
